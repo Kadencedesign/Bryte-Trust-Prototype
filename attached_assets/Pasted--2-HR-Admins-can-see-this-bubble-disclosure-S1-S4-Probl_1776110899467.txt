@@ -1,0 +1,42 @@
+  2. "HR Admins can see this" (bubble disclosure, S1 + S4)
+
+  Problem: "This" implies only that specific message. It doesn't convey that the full conversation — including Bryte's responses and any edits — is logged.
+
+  Fix: "Your employer can access this conversation." Or: "This conversation is logged and visible to HR administrators."
+
+  ---
+  3. "visible only to you and payroll administrators" (S2 form note)
+
+  Problem: "Only to you" implies a degree of privacy. Legal's concern was exactly this — on a company system, nothing is visible "only" to the employee. The framing creates a false sense of confidentiality.
+
+  Fix: "Visible to you and payroll administrators." Drop "only."
+
+  ---
+  4. "Your manager cannot see your conversations" (S2 first-use modal)
+
+  Problem: This may be inaccurate depending on admin role hierarchy. It's also not something we can guarantee without knowing the customer's admin setup. Legal's guidance: don't make specific privacy claims you
+   can't back up.
+
+  Fix: Remove this line. The accurate statement is who can see it, not who can't.
+
+  ---
+  5. No upfront disclosure in S1 and S3
+
+  Problem: S1 fires immediately — Bryte's first message appears before the user has any chance to know their conversation is visible to their employer. S3 has a coaching banner but no session-level disclosure.
+
+  S2 is the only scenario with a first-use modal. Legal's requirement is that employees know upfront — before they type anything sensitive.
+
+  Fix: Either:
+  - Add a lightweight, persistent notice at the top of the chat panel (all scenarios): "Conversations with Bryte are logged and accessible to HR administrators."
+  - Or gate S1 and S3 with a first-use acknowledgment similar to S2 — briefer, but present.
+
+  The banner approach is lower friction and consistent across all scenarios without adding another modal.
+
+  ---
+  6. Missing: what exactly is stored
+
+  The sprint review flagged this as unresolved — Renae asked about PII visibility for admins, individual vs. aggregate. The current disclosures say conversations are "logged" but don't specify what that
+  includes: the user's message, Bryte's response, redacted versions vs. originals, metadata.
+
+  Fix: This is a product decision, not just a copy fix. But the prototype should at minimum be consistent: if redaction happens (S3), the disclosure should note "the conversation visible to administrators
+  reflects edits made before processing." For now, flag this as an open question rather than asserting something inaccurate.

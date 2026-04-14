@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bryte Trust — Prototype</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&display=swap" rel="stylesheet">
+
+  <script type="module" src="https://ignite.cdn.ultipro.com/dls-cdn/ignite/latest/web-components/ignite/ignite.esm.js"></script>
+  <link rel="stylesheet" href="https://ignite.cdn.ultipro.com/dls-cdn/ignite/latest/web-components/ignite/ignite.css" />
+  <link rel="stylesheet" href="https://ignite.cdn.ultipro.com/dls-cdn/ignite/latest/web-components/ignite/ignite-modern-theme.css" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      height: 100vh;
+      display: flex;
+      background: #f4f5f7;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      overflow: hidden;
+    }
+
+    /* ── Dimmed app background ── */
+    .app-bg {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      opacity: 0.25;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .app-topbar {
+      height: 56px;
+      background: white;
+      border-bottom: 1px solid #e0e2e6;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .app-topbar-logo { font-size: 1.0625rem; font-weight: 700; color: #005151; }
+    .app-topbar-divider { width: 1px; height: 20px; background: #e0e2e6; }
+    .app-topbar-page { font-size: 0.875rem; color: #555; }
+
+    .app-content { flex: 1; padding: 32px; background: #f4f5f7; }
+
+    .app-card {
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e0e2e6;
+      padding: 24px;
+      max-width: 520px;
+    }
+
+    .app-card-title { font-size: 1rem; font-weight: 600; color: #1a1a1a; margin-bottom: 20px; }
+    .app-field { margin-bottom: 16px; }
+    .app-field-label { font-size: 0.6875rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 3px; }
+    .app-field-value { font-size: 0.9375rem; color: #1a1a1a; }
+
+    /* ── Bryte panel ── */
+    .bryte-panel {
+      width: 400px;
+      min-width: 400px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #FDFBF8;
+      border-left: 1px solid #dde1e8;
+      box-shadow: -2px 0 16px rgba(0,0,0,0.07);
+      overflow: hidden;
+    }
+
+    /* ── Scenario switcher (floating left) ── */
+    .scenario-bar {
+      position: fixed;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: #1e1e1e;
+      border-radius: 10px;
+      padding: 12px 10px;
+      z-index: 999;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .scenario-label {
+      font-size: 0.5625rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #888;
+      text-align: center;
+      margin-bottom: 2px;
+    }
+
+    .scenario-btn {
+      padding: 7px 10px;
+      border: 1px solid #3a3a3a;
+      border-radius: 6px;
+      background: #2a2a2a;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #ccc;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      line-height: 1.3;
+      white-space: nowrap;
+    }
+
+    .scenario-btn:hover { background: #333; color: white; }
+
+    .scenario-btn.active {
+      background: #005151;
+      color: white;
+      border-color: #007a7a;
+    }
+
+    /* ── Panel header ── */
+    .panel-header {
+      flex-shrink: 0;
+      border-bottom: 1px solid #e8eaed;
+    }
+
+    .panel-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 8px 14px 16px;
+    }
+
+    .bryte-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .header-pm-control {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-right: 4px;
+    }
+
+    .header-pm-label {
+      font-size: 0.75rem;
+      color: #666;
+      white-space: nowrap;
+    }
+
+    .header-pm-control ukg-switch {
+      transform: scale(0.8);
+      transform-origin: right center;
+    }
+
+    /* ── User bubble disclosure footnote ── */
+    .bubble-disclosure {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.6875rem;
+      color: #999;
+      margin-top: 4px;
+      justify-content: flex-end;
+      transition: color 0.2s;
+    }
+    .bubble-disclosure.is-private { color: #7c5cbf; }
+    .disclosure-sep { color: #ccc; }
+    .disclosure-action {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 0.6875rem;
+      color: #7c5cbf;
+      cursor: pointer;
+      text-decoration: underline;
+      font-family: inherit;
+    }
+    .disclosure-action:hover { color: #5f3dc4; }
+
+    /* ── Chat body ── */
+    .chat-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+      background: #FDFBF8;
+    }
+
+    .private-on-notice {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #5f3dc4;
+      padding: 0 0 4px 0;
+      margin-left: 0;
+    }
+
+    .ai-content {
+      font-size: 0.875rem;
+      line-height: 1.6;
+      color: var(--ukg_sys_color_text_highEmphasis_onLight, #1a1a1a);
+    }
+
+    .ai-content p { margin-bottom: 8px; }
+    .ai-content p:last-child { margin-bottom: 0; }
+    .ai-content ul { margin: 6px 0; padding-left: 18px; }
+    .ai-content li { margin-bottom: 4px; }
+    .ai-content strong { font-weight: 600; }
+
+    .banner-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Chat footer ── */
+    .chat-footer {
+      border-top: 1px solid #e8eaed;
+      padding: 12px 16px 14px;
+      flex-shrink: 0;
+    }
+
+    .transparency-note {
+      margin-top: 8px;
+      font-size: 0.6875rem;
+      color: #aaa;
+      text-align: center;
+    }
+
+    /* Scenario sections */
+    .scenario-section { display: none; flex-direction: column; gap: 14px; position: relative; }
+    .scenario-section.active { display: flex; }
+
+    /* Message sequence wrappers */
+    .msg-in { display: none; flex-direction: column; gap: 4px; }
+    .msg-in.visible { display: flex; }
+    .msg-in:has(ukg-ai-message-bubble:not([ai])) { align-items: flex-end; }
+
+    .hidden { display: none !important; }
+
+    /* ── First-use overlay (scenario 3) ── */
+    .first-use-overlay {
+      position: absolute;
+      inset: -20px -16px -20px -16px; /* cover the chat-body padding */
+      background: #FDFBF8;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 20px;
+    }
+
+    .first-use-card {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .first-use-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #e8eaed;
+    }
+
+    .first-use-block-title {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #888;
+      margin-bottom: 6px;
+    }
+
+    .first-use-list {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 0.875rem;
+      color: #1a1a1a;
+      line-height: 1.75;
+    }
+
+    .first-use-actions {
+      display: flex;
+      gap: 8px;
+      padding-top: 4px;
+    }
+
+    /* ── Scenario 2: full-screen first-use modal ── */
+    .fu-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,15,15,0.45);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .fu-modal-backdrop.hidden { display: none; }
+    .fu-modal-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 28px 24px 24px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* ── Scenario 2: direct deposit form ── */
+    .dd-form-card {
+      margin-top: 10px;
+      background: #fff;
+      border: 1px solid #e4e7ec;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .dd-form-inner { padding: 16px; }
+    .dd-form-title {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 16px;
+    }
+    .dd-form-fields { display: flex; flex-direction: column; gap: 12px; }
+    .dd-field { display: flex; flex-direction: column; gap: 4px; }
+    .dd-label { font-size: 0.8125rem; color: #888; font-weight: 400; }
+    .dd-input {
+      border: 1px solid #d8dade;
+      border-radius: 6px;
+      padding: 9px 12px;
+      font-size: 0.875rem;
+      font-family: inherit;
+      color: #1a1a1a;
+      background: #fff;
+      outline: none;
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .dd-input:focus { border-color: #005151; box-shadow: 0 0 0 2px rgba(0,81,81,0.1); }
+    .dd-select-wrap { position: relative; }
+    .dd-select-arrow {
+      position: absolute;
+      right: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: #555;
+      font-size: 0.6875rem;
+      line-height: 1;
+    }
+    .dd-form-note {
+      font-size: 0.6875rem;
+      color: #aaa;
+      margin-top: 14px;
+    }
+    .dd-pill-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .dd-pill-btn {
+      background: #daeee9;
+      border: none;
+      border-radius: 100px;
+      padding: 8px 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .dd-pill-btn:hover { background: #c4e5de; }
+
+    /* ── Button color — teal theme to match Ready brand ── */
+    .bryte-panel {
+      --ukg_sys_color_action_enabled:             #006D65;
+      --ukg_sys_color_action_hover:               #005952;
+      --ukg_sys_color_action_active:              #004840;
+      --ukg_sys_color_text_action_enabled:        #006D65;
+      --ukg_sys_color_text_action_hover:          #005952;
+      --ukg_sys_color_text_action_active:         #004840;
+    }
+
+    /* ── Hide AI avatar in chat — already shown in panel header ── */
+    ukg-ai-message-bubble[ai]::part(avatar),
+    ukg-ai-message-bubble[ai]::part(icon),
+    ukg-ai-message-bubble[ai]::part(logo) { display: none !important; }
+
+    /* ── Message feedback row ── */
+    .feedback-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .feedback-label {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      font-weight: 400;
+      margin-right: 2px;
+    }
+    .feedback-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 3px;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      border-radius: 4px;
+      transition: color 0.15s;
+      font-size: 18px;
+    }
+    .feedback-btn:hover { color: #374151; }
+    .feedback-btn.active-up { color: #006D65; }
+    .feedback-btn.active-down { color: #b91c1c; }
+
+    /* ── System note (redaction confirmation) ── */
+    .system-note {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      font-size: 0.6875rem;
+      color: #6b7280;
+      padding: 2px 16px;
+    }
+
+    /* ── Response source attribution ── */
+    .response-source {
+      font-size: 0.6875rem;
+      color: #bbb;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid #f0f0f0;
+      margin-bottom: 0;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Employee app background (scenarios 1–4) -->
+  <div class="app-bg">
+    <div class="app-topbar">
+      <span class="app-topbar-logo">UKG Ready</span>
+      <div class="app-topbar-divider"></div>
+      <span class="app-topbar-page">My Profile › Personal Information</span>
+    </div>
+    <div class="app-content">
+      <div class="app-card">
+        <div class="app-card-title">Personal Information</div>
+        <div class="app-field">
+          <div class="app-field-label">Full Name</div>
+          <div class="app-field-value">Jordan Ellis</div>
+        </div>
+        <div class="app-field">
+          <div class="app-field-label">Department</div>
+          <div class="app-field-value">Customer Success</div>
+        </div>
+        <div class="app-field">
+          <div class="app-field-label">Manager</div>
+          <div class="app-field-value">Sara Okonkwo</div>
+        </div>
+        <div class="app-field">
+          <div class="app-field-label">Start Date</div>
+          <div class="app-field-value">March 14, 2021</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scenario switcher (floating left, outside the panel) -->
+  <div class="scenario-bar">
+    <span class="scenario-label">Scenario</span>
+    <button class="scenario-btn active" data-scenario="1">1 — Resignation</button>
+    <button class="scenario-btn" data-scenario="2">2 — Personal info update</button>
+    <button class="scenario-btn" data-scenario="3">3 — Struggling team member</button>
+    <button class="scenario-btn" data-scenario="4">4 — Burnout / EAP</button>
+  </div>
+
+  <!-- Bryte side panel -->
+  <div class="bryte-panel">
+
+    <!-- Panel header -->
+    <div class="panel-header">
+
+      <div class="panel-title-row">
+        <div class="bryte-title">
+          <ukg-ai-logo style="width: 22px; height: 22px;"></ukg-ai-logo>
+          Bryte
+        </div>
+        <div class="header-right">
+          <ukg-button emphasis="low" icon-only aria-label="Close Bryte">
+            <ukg-icon slot="parent-icon" icon="close"></ukg-icon>
+          </ukg-button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Chat body -->
+    <div class="chat-body" id="chat-body">
+
+      <!-- ════════════════════════════════════════════
+           SCENARIO 1 — Resignation / Honest disclosure
+           Employee / Sensitive topic
+           ════════════════════════════════════════════ -->
+      <div class="scenario-section active" id="scenario-1">
+
+        <!-- Step 1: User message (auto-fires on scenario select) -->
+        <div class="msg-in" id="s1-user">
+          <ukg-ai-message-bubble>
+            <span style="font-size: 0.875rem; line-height: 1.55;">
+              I've been thinking about resigning. Can you walk me through what the process
+              looks like? I don't want anyone on my team to know — especially not my manager.
+            </span>
+          </ukg-ai-message-bubble>
+          <div class="bubble-disclosure" id="s1-disclosure" style="display: none;">
+            <ukg-icon icon="visibility" style="font-size: 10px;"></ukg-icon>
+            <span>HR Admins can see this</span>
+          </div>
+        </div>
+
+        <!-- Step 2: Loading indicator -->
+        <div class="msg-in" id="s1-loader-1">
+          <ukg-ai-message-bubble ai>
+            <ukg-ai-progress-indicator></ukg-ai-progress-indicator>
+          </ukg-ai-message-bubble>
+        </div>
+
+        <!-- Step 3: Bryte acknowledges scope + honest transparency notice -->
+        <div class="msg-in" id="s1-suggest">
+          <ukg-ai-message-bubble ai>
+            <div class="ai-content">
+              <p>I can help you understand the resignation process — that's something I can walk you through.</p>
+              <p>Before we continue: this conversation is visible to HR administrators at your company. I want to be upfront about that before we go further.</p>
+              <p>Would you like to continue here?</p>
+            </div>
+            <div class="banner-actions" style="margin-top: 10px;">
+              <ukg-button id="s1-btn-continue">Yes, continue</ukg-button>
+              <ukg-button emphasis="low" id="s1-btn-skip">No thanks</ukg-button>
+            </div>
+          </ukg-ai-message-bubble>
+        </div>
+
+        <!-- Step 4: Loading after button decision -->
+        <div class="msg-in" id="s1-loader-2">
+          <ukg-ai-message-bubble ai>
+            <ukg-ai-progress-indicator></ukg-ai-progress-indicator>
+          </ukg-ai-message-bubble>
+        </div>
+
+        <!-- Step 5: Bryte response if user declines -->
+        <div class="msg-in" id="s1-response-no">
+          <ukg-ai-message-bubble ai>
+            <div class="ai-content">
+              <p>No problem — feel free to come back anytime if you change your mind.</p>
+            </div>
+          </ukg-ai-message-bubble>
+        </div>
+
+        <!-- Step 6: Bryte full response (after "Yes, continue") -->
+        <div class="msg-in" id="s1-response">
+          <ukg-ai-message-bubble ai>
+            <div class="ai-content">
+              <p>Happy to help. Here's what the resignation process typically looks like:</p>
+              <ul>
+                <li><strong>Notice period:</strong> Check your offer letter — standard is 2 weeks, but yours may differ.</li>
+                <li><strong>Submitting your resignation:</strong> Usually a written letter or email to your manager, with HR copied.</li>
+                <li><strong>Final paycheck:</strong> Timing depends on your state's law. I can look up the rules for your location.</li>
+                <li><strong>Benefits:</strong> Coverage typically ends at the end of your last month. COBRA may be an option.</li>
+                <li><strong>PTO payout:</strong> Depends on company policy — I can check your current accrual balance.</li>
+              </ul>
+              <p>Before making any decisions, speaking with HR directly is the best next step. Would you like me to find the right contact?</p>
+              <p class="response-source">Based on your company's HR policy documents</p>
+            </div>
+          </ukg-ai-message-bubble>
+          <div class="feedback-row">
+            <span class="feedback-label">Is this helpful?</span>
+            <button class="feedback-btn" onclick="handleFeedback(this, 'up')"><svg xmlns="http://www.w3.org/2000/svg" height="18" width="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 21h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2zM9 9l4.34-4.34L12 10h9v2l-3 7H9V9zm-6 0h4v12H3V9z"/></svg></button>
+            <button class="feedback-btn" onclick="handleFeedback(this, 'down')"><svg xmlns="http://www.w3.org/2000/svg" height="18" width="18" viewBox="0 0 24 24" fill="currentColor"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L10.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm0 12l-4.34 4.34L12 14H3v-2l3-7h9v10zm4-12h4v12h-4V3z"/></svg></button>
+          </div>
+        </div>
+
+      </div>
+      <!-- end scenario 1 -->
+
+      <!-- ════════════════════════════════════════════
+           SCENARIO 2 — Direct deposit update
+           Employee / First-use education / Form flow
+           ════════════════════════════════════════════ -->
+      <div class="scenario-section" id="scenario-2">
+
+        <!-- First-use modal — centered on screen, overlays full app -->
+        <div class="fu-modal-backdrop hidden" id="s2-first-use">
+          <div class="fu-modal-card">
+            <div class="first-use-header">
+              <ukg-ai-logo style="width: 26px; height: 26px; flex-shrink: 0;"></ukg-ai-logo>
+              <span style="font-size: 0.9375rem; font-weight: 600; color: #1a1a1a;">Meet Bryte</span>
+            </div>
+
+            <div class="first-use-block">
+              <p class="first-use-block-title">What Bryte can do</p>
+              <ul class="first-use-list">
+                <li>Complete HR tasks directly in the chat</li>
+                <li>Answer payroll and benefits questions</li>
+                <li>Surface your data from connected systems</li>
+              </ul>
+            </div>
+
+            <div class="first-use-block">
+              <p class="first-use-block-title">What to know</p>
+              <ul class="first-use-list">
+                <li>Conversations are logged for audit purposes</li>
+                <li>HR administrators can view non-private conversations</li>
+                <li>Your manager cannot see your conversations</li>
+              </ul>
+            </div>
+
+            <div class="first-use-actions">
+              <ukg-button id="s2-btn-got-it">Got it</ukg-button>
+              <ukg-button emphasis="low">Learn more</ukg-button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conversation (shown after modal dismissed) -->
+        <div id="s2-conversation" class="hidden" style="display:flex; flex-direction:column; gap:14px;">
+
+          <!-- Step 1: User message -->
+          <div class="msg-in" id="s2-user">
+            <ukg-ai-message-bubble>
+              <span style="font-size: 0.875rem; line-height: 1.55;">I would like to update my direct deposit.</span>
+            </ukg-ai-message-bubble>
+          </div>
+
+          <!-- Step 2: Loading -->
+          <div class="msg-in" id="s2-loader-1">
+            <ukg-ai-message-bubble ai>
+              <ukg-ai-progress-indicator></ukg-ai-progress-indicator>
+            </ukg-ai-message-bubble>
+          </div>
+
+          <!-- Step 3: Bryte form -->
+          <div class="msg-in" id="s2-form">
+            <ukg-ai-message-bubble ai>
+              <div class="ai-content">
+                <p>Sure — fill out your new banking details below.</p>
+              </div>
+              <div class="dd-form-card">
+                <div class="dd-form-inner">
+                  <p class="dd-form-title">Direct Deposit Information</p>
+                  <div class="dd-form-fields">
+                    <div class="dd-field">
+                      <label class="dd-label">Routing number</label>
+                      <input class="dd-input" type="text">
+                    </div>
+                    <div class="dd-field">
+                      <label class="dd-label">Account number</label>
+                      <input class="dd-input" type="text">
+                    </div>
+                    <div class="dd-field">
+                      <label class="dd-label">Account type</label>
+                      <div class="dd-select-wrap">
+                        <select class="dd-input dd-select">
+                          <option>Checking</option>
+                          <option>Savings</option>
+                        </select>
+                        <span class="dd-select-arrow">▾</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="dd-form-note">🔒 Encrypted · visible only to you and payroll administrators</p>
+                </div>
+              </div>
+              <div class="dd-pill-actions">
+                <button class="dd-pill-btn" id="s2-btn-submit">Save</button>
+                <button class="dd-pill-btn">Cancel</button>
+              </div>
+            </ukg-ai-message-bubble>
+          </div>
+
+          <!-- Step 4: Loading after submit -->
+          <div class="msg-in" id="s2-loader-2">
+            <ukg-ai-message-bubble ai>
+              <ukg-ai-progress-indicator></ukg-ai-progress-indicator>
+            </ukg-ai-message-bubble>
+          </div>
+
+          <!-- Step 5: Confirmation -->
+          <div class="msg-in" id="s2-response-2">
+            <ukg-ai-message-bubble ai>
+              <div class="ai-content">
+                <p>Your new bank account has been saved.</p>
+                <ul>
+                  <li><strong>Stored in:</strong> UKG payroll system (encrypted)</li>
+                  <li><strong>Accessible to:</strong> you, payroll administrators</li>
+                  <li><strong>Takes effect:</strong> next pay run (Apr 25)</li>
+                </ul>
+                <p>Questions about how your data is stored? <a href="#" style="color: inherit; font-weight: 600; text-underline-offset: 2px;">Learn more</a></p>
+              </div>
+            </ukg-ai-message-bubble>
+            <div class="feedback-row">
+              <span class="feedback-label">Is this helpful?</span>
+              <button class="feedback-btn" onclick="handleFeedback(this, 'up')"><svg xmlns="http://www.w3.org/2000/svg" height="18" width="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 21h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2zM9 9l4.34-4.34L12 10h9v2l-3 7H9V9zm-6 0h4v12H3V9z"/></svg></button>
+              <button class="feedback-btn" onclick="handleFeedback(this, 'down')"><svg xmlns="http://www.w3.org/2000/svg" height="18" width="18" viewBox="0 0 24 24" fill="currentColor"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L10.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm0 12l-4.34 4.34L12 14H3v-2l3-7h9v10zm4-12h4v12h-4V3z"/></svg></button>
+            </div>
+          </div>
+
+        </div>
+        <!-- end s2-conversation -->
+
+      </div>
+      <!-- end scenario 2 -->
+
+      <!-- ════════════════════════════════════════════
+           SCENARIO 3 — Struggling team member
+           Manager / Personal observation / Trust gap
+           ════════════════════════════════════════════ -->
+      <div class="scenario-section" id="scenario-3">
+
+        <!-- First-use disclaimer overlay -->
+        <div class="first-use-overlay" id="s3-first-use">
+          <div class="first-use-card">
+            <div class="first-use-header">
+              <ukg-ai-logo style="width: 26px; height: 26px; flex-shrink: 0;"></ukg-ai-logo>
+              <span style="font-size: 0.9375rem; font-weight: 600; color: #1a1a1a;">Before you start</span>
+            </div>
+
+            <div class="first-use-block">
+              <p class="first-use-block-title">What Bryte can do</p>
+              <ul class="first-use-list">
+                <li>Complete HR tasks in the chat</li>
+                <li>Answer HR and payroll questions</li>
+                <li>Surface your data from connected systems</li>
+              </ul>
+            </div>
+
+            <div class="first-use-actions">
+              <ukg-button id="s3-btn-get-started">Get started</ukg-button>
+              <ukg-button emphasis="low">Learn more</ukg-button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conversation (shown after disclaimer dismissed) -->
+        <div id="s3-conversation" class="hidden" style="display:flex; flex-direction:column; gap:14px;">
+
+          <!-- Step 1: User message (auto-fires after disclaimer) -->
+          <div class="msg-in" id="s3-user">
+            <ukg-ai-message-bubble>
+              <span style="font-size: 0.875rem; line-height: 1.55;">
+                I'm a bit worried about one of my team members — Rose. She's been missing
+                standup, seems really disengaged, and I overheard her telling a coworker
+                she's going through something personal. I'm not sure what to do.
+              </span>
+            </ukg-ai-message-bubble>
+          </div>
+
+          <!-- Step 2: Loading -->
+          <div class="msg-in" id="s3-loader-1">
+            <ukg-ai-message-bubble ai>
+              <ukg-ai-progress-indicator></ukg-ai-progress-indicator>
+            </ukg-ai-message-bubble>
+          </div>
+
+          <!-- Step 3: Inline coaching hint -->
+          <div class="msg-in" id="s3-suggest">
+            <ukg-ai-message-bubble ai>
+              <ukg-banner inline type="information" no-max-width>
+                For general guidance, names aren't needed — your question will still be answered accurately. (If you're filing a formal report, you can include names.)
+                Try: <em>"One of my team members has been missing standups and seems disengaged. I overheard they're dealing with something personal. How should I handle this as their manager?"</em>
+                <div slot="end">
+                  <ukg-button id="s3-btn-use-this">Use this version</ukg-button>
+                </div>
+              </ukg-banner>
+            </ukg-ai-message-bubble>
+          </div>
+
+          <!-- Redaction confirmation (shows after "Use this version") -->
+          <div class="msg-in" id="s3-redact-confirm">
+            <div class="system-note">
+              <svg xmlns="http://www.w3.org/2000/svg" height="13" width="13" viewBox="0 0 24 24" fill="#059669"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              <span>Employee information removed before processing — not sent to Bryte</span>
+            </div>
+          </div>
+
+          <!-- Step 4: Loading -->
+          <div class="msg-in" id="s3-loader-2">
+            <ukg-ai-message-bubble ai>
+              <ukg-ai-progress-indicator></ukg-ai-progress-indicator>
+            </ukg-ai-message-bubble>
+          </div>
+
+          <!-- Step 6: Bryte response -->
+          <div class="msg-in" id="s3-response">
+            <ukg-ai-message-bubble ai>
+              <div class="ai-content">
+                <p>It sounds like your team member may be going through a difficult time. Here are some ways to support them while staying within your role as a manager:</p>
+                <ul>
+                  <li><strong>Check in privately:</strong> A low-pressure 1:1 — "I've noticed you seem a bit off lately, just wanted to see how you're doing" — can go a long way.</li>
+                  <li><strong>Share available resources:</strong> Remind them about your EAP (Employee Assistance Program) if your company offers one. It's confidential.</li>
+                  <li><strong>Adjust expectations temporarily:</strong> If you can offer flexibility on deadlines or workload, that may help while they stabilize.</li>
+                  <li><strong>Loop in HR if needed:</strong> If you're concerned about their wellbeing or the situation affecting the team, HR can advise on next steps without requiring a formal action.</li>
+                </ul>
+                <p>Would you like help drafting a message to open that check-in conversation?</p>
+                <p class="response-source">Based on your company's HR policy documents</p>
+              </div>
+            </ukg-ai-message-bubble>
+            <div class="feedback-row">
+              <span class="feedback-label">Is this helpful?</span>
+              <button class="feedback-btn" onclick="handleFeedback(this, 'up')"><svg xmlns="http://www.w3.org/2000/svg" height="18" width="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 21h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2zM9 9l4.34-4.34L12 10h9v2l-3 7H9V9zm-6 0h4v12H3V9z"/></svg></button>
+              <button class="feedback-btn" onclick="handleFeedback(this, 'down')"><svg xmlns="http://www.w3.org/2000/svg" height="18" width="18" viewBox="0 0 24 24" fill="currentColor"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L10.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm0 12l-4.34 4.34L12 14H3v-2l3-7h9v10zm4-12h4v12h-4V3z"/></svg></button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+      <!-- end scenario 3 -->
+
+      <!-- ════════════════════════════════════════════
+           SCENARIO 4 — Burnout / Mental health
+           Employee / Out-of-scope / EAP redirect
+           ════════════════════════════════════════════ -->
+      <div class="scenario-section" id="scenario-4">
+
+        <!-- Step 1: User message -->
+        <div class="msg-in" id="s4-user">
+          <ukg-ai-message-bubble>
+            <span style="font-size: 0.875rem; line-height: 1.55;">
+              I've been feeling really burned out and anxious about work lately. It's been hard to focus. Can you help?
+            </span>
+          </ukg-ai-message-bubble>
+          <div class="bubble-disclosure" id="s4-disclosure" style="display: none;">
+            <ukg-icon icon="visibility" style="font-size: 10px;"></ukg-icon>
+            <span>HR Admins can see this</span>
+          </div>
+        </div>
+
+        <!-- Step 2: Loading -->
+        <div class="msg-in" id="s4-loader-1">
+          <ukg-ai-message-bubble ai>
+            <ukg-ai-progress-indicator></ukg-ai-progress-indicator>
+          </ukg-ai-message-bubble>
+        </div>
+
+        <!-- Step 3: Bryte declines + redirects to EAP -->
+        <div class="msg-in" id="s4-response">
+          <ukg-ai-message-bubble ai>
+            <div class="ai-content">
+              <p>What you're describing sounds genuinely hard, and I'm glad you said something.</p>
+              <p>This isn't something I'm able to help with — Bryte is built for HR tasks, payroll, and workplace questions, not personal wellbeing. For what you're going through, a trained person is a much better resource than I am.</p>
+              <p>If your company offers an <strong>Employee Assistance Program (EAP)</strong>, that's the right place to start. EAP services are confidential, free, and can connect you with a counselor quickly.</p>
+            </div>
+            <div class="banner-actions" style="margin-top: 10px;">
+              <ukg-button id="s4-btn-eap">Find my EAP</ukg-button>
+              <ukg-button emphasis="low">Contact HR</ukg-button>
+            </div>
+          </ukg-ai-message-bubble>
+          <div class="feedback-row">
+            <span class="feedback-label">Is this helpful?</span>
+            <button class="feedback-btn" onclick="handleFeedback(this, 'up')"><svg xmlns="http://www.w3.org/2000/svg" height="18" width="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 21h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2zM9 9l4.34-4.34L12 10h9v2l-3 7H9V9zm-6 0h4v12H3V9z"/></svg></button>
+            <button class="feedback-btn" onclick="handleFeedback(this, 'down')"><svg xmlns="http://www.w3.org/2000/svg" height="18" width="18" viewBox="0 0 24 24" fill="currentColor"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L10.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm0 12l-4.34 4.34L12 14H3v-2l3-7h9v10zm4-12h4v12h-4V3z"/></svg></button>
+          </div>
+        </div>
+
+      </div>
+      <!-- end scenario 4 -->
+
+
+    </div>
+    <!-- end chat-body -->
+
+    <!-- Footer -->
+    <div class="chat-footer">
+      <ukg-chat-input placeholder="Message Bryte…" id="chat-input"></ukg-chat-input>
+      <div class="transparency-note">Bryte can make mistakes. Review important information.</div>
+    </div>
+
+  </div>
+
+  <script>
+    // ── Utilities ─────────────────────────────────
+    let pendingTimers = [];
+
+    function clearPending() {
+      pendingTimers.forEach(t => clearTimeout(t));
+      pendingTimers = [];
+    }
+
+    function wait(ms) {
+      return new Promise(resolve => {
+        const t = setTimeout(resolve, ms);
+        pendingTimers.push(t);
+      });
+    }
+
+    function show(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('visible');
+      scrollDown();
+    }
+
+    function hide(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('visible');
+    }
+
+    function scrollDown() {
+      setTimeout(() => {
+        document.getElementById('chat-body').scrollTop = 99999;
+      }, 60);
+    }
+
+    // ── Reset all message state ───────────────────
+    function resetAll() {
+      document.querySelectorAll('.msg-in').forEach(el => el.classList.remove('visible'));
+      const s2c = document.getElementById('s2-conversation');
+      s2c.classList.add('hidden'); s2c.style.display = 'none';
+      document.getElementById('s2-first-use').classList.add('hidden');
+      const s3c = document.getElementById('s3-conversation');
+      s3c.classList.add('hidden'); s3c.style.display = 'none';
+      document.getElementById('s3-first-use').classList.add('hidden');
+      document.getElementById('s1-disclosure').style.display = 'none';
+      document.getElementById('s4-disclosure').style.display = 'none';
+    }
+
+    // ── Scenario switcher ─────────────────────────
+    const scenarioBtns   = document.querySelectorAll('.scenario-btn');
+    const scenarioPanels = document.querySelectorAll('.scenario-section');
+
+    async function activateScenario(num) {
+      clearPending();
+      resetAll();
+      document.getElementById('chat-body').scrollTop = 0;
+
+      scenarioBtns.forEach(b => b.classList.toggle('active', b.dataset.scenario === String(num)));
+      scenarioPanels.forEach(p => p.classList.toggle('active', p.id === `scenario-${num}`));
+
+      if (num === 1) fireScenario1();
+      if (num === 2) fireScenario2();
+      if (num === 3) fireScenario3();
+      if (num === 4) fireScenario4();
+    }
+
+    scenarioBtns.forEach(btn => {
+      btn.addEventListener('click', () => activateScenario(+btn.dataset.scenario));
+    });
+
+    // ── Scenario 1 — Resignation ──────────────────
+    async function fireScenario1() {
+      await wait(350);  show('s1-user');
+      document.getElementById('s1-disclosure').style.display = 'flex';
+      await wait(480);  show('s1-loader-1');
+      await wait(1900); hide('s1-loader-1'); show('s1-suggest');
+    }
+
+    document.getElementById('s1-btn-continue').addEventListener('click', async () => {
+      hide('s1-suggest');
+      show('s1-loader-2');
+      await wait(1800); hide('s1-loader-2');
+      show('s1-response');
+    });
+
+    document.getElementById('s1-btn-skip').addEventListener('click', async () => {
+      hide('s1-suggest');
+      show('s1-loader-2');
+      await wait(1200); hide('s1-loader-2');
+      show('s1-response-no');
+    });
+
+    // ── Scenario 2 — Direct deposit ───────────────
+    async function fireScenario2() {
+      await wait(350);
+      document.getElementById('s2-first-use').classList.remove('hidden');
+    }
+
+    document.getElementById('s2-btn-got-it').addEventListener('click', async () => {
+      document.getElementById('s2-first-use').classList.add('hidden');
+      const c = document.getElementById('s2-conversation');
+      c.classList.remove('hidden'); c.style.display = 'flex';
+      await wait(300);  show('s2-user');
+      await wait(480);  show('s2-loader-1');
+      await wait(1900); hide('s2-loader-1'); show('s2-form');
+    });
+
+    document.getElementById('s2-btn-submit').addEventListener('click', async () => {
+      hide('s2-form');
+      show('s2-loader-2');
+      await wait(1800); hide('s2-loader-2'); show('s2-response-2');
+    });
+
+    // ── Scenario 3 — Struggling team member ───────
+    async function fireScenario3() {
+      const c = document.getElementById('s3-conversation');
+      c.classList.remove('hidden'); c.style.display = 'flex';
+      await wait(350);  show('s3-user');
+      await wait(480);  show('s3-loader-1');
+      await wait(1900); hide('s3-loader-1'); show('s3-suggest');
+    }
+
+    document.getElementById('s3-btn-use-this').addEventListener('click', async () => {
+      const userSpan = document.querySelector('#s3-user ukg-ai-message-bubble span');
+      userSpan.textContent = 'One of my team members has been missing standups and seems disengaged. I overheard they\'re dealing with something personal. How should I handle this as their manager?';
+      hide('s3-suggest');
+      show('s3-redact-confirm');
+      await wait(1200); show('s3-loader-2');
+      await wait(1900); hide('s3-loader-2'); show('s3-response');
+    });
+
+    // ── Scenario 4 — Burnout / EAP ────────────────
+    async function fireScenario4() {
+      await wait(350);  show('s4-user');
+      document.getElementById('s4-disclosure').style.display = 'flex';
+      await wait(480);  show('s4-loader-1');
+      await wait(1900); hide('s4-loader-1'); show('s4-response');
+    }
+
+    // ── Chat input handler ────────────────────────
+    document.getElementById('chat-input').addEventListener('ukgChatInputSend', async (e) => {
+      const text = e.detail.message;
+      if (!text?.trim()) return;
+
+      const activeSection = document.querySelector('.scenario-section.active');
+
+      const userWrap = document.createElement('div');
+      userWrap.className = 'msg-in visible';
+      userWrap.innerHTML = `<ukg-ai-message-bubble>
+        <span style="font-size:0.875rem;line-height:1.55;">${text}</span>
+      </ukg-ai-message-bubble>`;
+      activeSection.appendChild(userWrap);
+      scrollDown();
+
+      const loaderWrap = document.createElement('div');
+      loaderWrap.className = 'msg-in visible';
+      loaderWrap.innerHTML = `<ukg-ai-message-bubble ai>
+        <ukg-ai-progress-indicator></ukg-ai-progress-indicator>
+      </ukg-ai-message-bubble>`;
+      activeSection.appendChild(loaderWrap);
+      scrollDown();
+
+      await wait(1800);
+
+      loaderWrap.innerHTML = `<ukg-ai-message-bubble ai>
+        <div class="ai-content">
+          <p>I can help with that — for this demo, use the buttons in the conversation above to continue the scripted flow.</p>
+        </div>
+      </ukg-ai-message-bubble>`;
+      scrollDown();
+    });
+
+    // ── Hide AI avatar in chat bubbles (shadow DOM) ──
+    function hideAiAvatars() {
+      document.querySelectorAll('ukg-ai-message-bubble[ai]').forEach(el => {
+        if (!el.shadowRoot) return;
+        const logo = el.shadowRoot.querySelector('ukg-ai-logo');
+        if (logo) logo.style.display = 'none';
+      });
+    }
+    customElements.whenDefined('ukg-ai-message-bubble').then(() => {
+      hideAiAvatars();
+      new MutationObserver(hideAiAvatars).observe(document.body, { childList: true, subtree: true });
+    });
+
+    // ── Feedback thumbs ───────────────────────────
+    function handleFeedback(btn, direction) {
+      const row = btn.closest('.feedback-row');
+      const [upBtn, downBtn] = row.querySelectorAll('.feedback-btn');
+      upBtn.classList.remove('active-up');
+      downBtn.classList.remove('active-down');
+      btn.classList.add(direction === 'up' ? 'active-up' : 'active-down');
+    }
+
+    // ── Auto-fire on load ─────────────────────────
+    activateScenario(1);
+  </script>
+
+</body>
+</html>
